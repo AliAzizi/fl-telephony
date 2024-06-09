@@ -7,6 +7,7 @@ enum class SmsAction(private val methodName: String) {
   GET_INBOX("getAllInboxSms"),
   GET_SENT("getAllSentSms"),
   GET_DRAFT("getAllDraftSms"),
+  GET_SIM_SLOTS("getSimSlots"),
   GET_CONVERSATIONS("getAllConversations"),
   SEND_SMS("sendSms"),
   SEND_MULTIPART_SMS("sendMultipartSms"),
@@ -72,6 +73,7 @@ enum class SmsAction(private val methodName: String) {
       GET_SIM_STATE,
       GET_SERVICE_STATE,
       GET_SIGNAL_STRENGTH,
+      GET_SIM_SLOTS,
       IS_NETWORK_ROAMING -> ActionType.GET
       REQUEST_SMS_PERMISSIONS,
       REQUEST_PHONE_PERMISSIONS,

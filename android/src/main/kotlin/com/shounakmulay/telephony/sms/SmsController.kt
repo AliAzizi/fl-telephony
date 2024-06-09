@@ -1,7 +1,6 @@
 package com.shounakmulay.telephony.sms
 
 import android.Manifest
-import android.Manifest.permission.READ_PHONE_STATE
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Context
@@ -12,6 +11,7 @@ import android.os.Build
 import android.telephony.*
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import com.shounakmulay.telephony.utils.Constants.ACTION_SMS_DELIVERED
@@ -21,27 +21,26 @@ import com.shounakmulay.telephony.utils.Constants.SMS_DELIVERED_BROADCAST_REQUES
 import com.shounakmulay.telephony.utils.Constants.SMS_SENT_BROADCAST_REQUEST_CODE
 import com.shounakmulay.telephony.utils.Constants.SMS_TO
 import com.shounakmulay.telephony.utils.ContentUri
-import java.lang.RuntimeException
 
 
 class SmsController(private val context: Context) {
 
     // FETCH SMS
     fun getMessages(
-        contentUri: ContentUri,
-        projection: List<String>,
-        selection: String?,
-        selectionArgs: List<String>?,
-        sortOrder: String?
+            contentUri: ContentUri,
+            projection: List<String>,
+            selection: String?,
+            selectionArgs: List<String>?,
+            sortOrder: String?
     ): List<HashMap<String, String?>> {
         val messages = mutableListOf<HashMap<String, String?>>()
 
         val cursor = context.contentResolver.query(
-            contentUri.uri,
-            projection.toTypedArray(),
-            selection,
-            selectionArgs?.toTypedArray(),
-            sortOrder
+                contentUri.uri,
+                projection.toTypedArray(),
+                selection,
+                selectionArgs?.toTypedArray(),
+                sortOrder
         )
 
         while (cursor != null && cursor.moveToNext()) {
@@ -60,33 +59,33 @@ class SmsController(private val context: Context) {
     }
 
     // SEND SMS
-    fun sendSms(destinationAddress: String, messageBody: String, listenStatus: Boolean) {
-        val smsManager = getSmsManager()
+    fun sendSms(destinationAddress: String, messageBody: String, listenStatus: Boolean, subscriptionId: Int?) {
+        val smsManager = getSmsManager(subscriptionId ?: SmsManager.getDefaultSmsSubscriptionId())
         if (listenStatus) {
             val pendingIntents = getPendingIntents()
             smsManager.sendTextMessage(
-                destinationAddress,
-                null,
-                messageBody,
-                pendingIntents.first,
-                pendingIntents.second
+                    destinationAddress,
+                    null,
+                    messageBody,
+                    pendingIntents.first,
+                    pendingIntents.second
             )
         } else {
             smsManager.sendTextMessage(destinationAddress, null, messageBody, null, null)
         }
     }
 
-    fun sendMultipartSms(destinationAddress: String, messageBody: String, listenStatus: Boolean) {
-        val smsManager = getSmsManager()
+    fun sendMultipartSms(destinationAddress: String, messageBody: String, listenStatus: Boolean, subscriptionId: Int?) {
+        val smsManager = getSmsManager(subscriptionId ?: SmsManager.getDefaultSmsSubscriptionId())
         val messageParts = smsManager.divideMessage(messageBody)
         if (listenStatus) {
             val pendingIntents = getMultiplePendingIntents(messageParts.size)
             smsManager.sendMultipartTextMessage(
-                destinationAddress,
-                null,
-                messageParts,
-                pendingIntents.first,
-                pendingIntents.second
+                    destinationAddress,
+                    null,
+                    messageParts,
+                    pendingIntents.first,
+                    pendingIntents.second
             )
         } else {
             smsManager.sendMultipartTextMessage(destinationAddress, null, messageParts, null, null)
@@ -119,10 +118,10 @@ class SmsController(private val context: Context) {
             flags = Intent.FLAG_RECEIVER_REGISTERED_ONLY
         }
         val sentPendingIntent = PendingIntent.getBroadcast(
-            context,
-            SMS_SENT_BROADCAST_REQUEST_CODE,
-            sentIntent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+                context,
+                SMS_SENT_BROADCAST_REQUEST_CODE,
+                sentIntent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val deliveredIntent = Intent(ACTION_SMS_DELIVERED).apply {
@@ -130,19 +129,38 @@ class SmsController(private val context: Context) {
             flags = Intent.FLAG_RECEIVER_REGISTERED_ONLY
         }
         val deliveredPendingIntent = PendingIntent.getBroadcast(
-            context,
-            SMS_DELIVERED_BROADCAST_REQUEST_CODE,
-            deliveredIntent,
-            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
+                context,
+                SMS_DELIVERED_BROADCAST_REQUEST_CODE,
+                deliveredIntent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE
         )
 
         return Pair(sentPendingIntent, deliveredPendingIntent)
     }
 
-    private fun getSmsManager(): SmsManager {
-        val subscriptionId = SmsManager.getDefaultSmsSubscriptionId()
-        val smsManager = SmsManager.getDefault()
-            ?: throw RuntimeException("Flutter Telephony: Error getting SmsManager")
+     fun getSimSlots(): List<Map<String, Any>> {
+        val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
+            return emptyList()
+        }
+
+        val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
+
+        return subscriptionInfoList.map {
+            mapOf(
+                    "subscriptionId" to it.subscriptionId,
+                    "index" to it.simSlotIndex,
+                    "carrierName" to it.carrierName.toString()
+            )
+        }
+    }
+
+
+    private fun getSmsManager(subscriptionId: Int): SmsManager {
+        val smsManager = SmsManager.getSmsManagerForSubscriptionId(2)
+                ?: throw RuntimeException("Flutter Telephony: Error getting SmsManager")
         if (subscriptionId != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 smsManager.createForSubscriptionId(subscriptionId)
@@ -255,7 +273,7 @@ class SmsController(private val context: Context) {
     private fun getTelephonyManager(): TelephonyManager {
         val subscriptionId = SmsManager.getDefaultSmsSubscriptionId()
         val telephonyManager =
-            context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+                context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             telephonyManager.createForSubscriptionId(subscriptionId)
         } else {

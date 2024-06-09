@@ -8,6 +8,7 @@ const BACKGROUND_SERVICE_INITIALIZED = "backgroundServiceInitialized";
 const GET_ALL_INBOX_SMS = "getAllInboxSms";
 const GET_ALL_SENT_SMS = "getAllSentSms";
 const GET_ALL_DRAFT_SMS = "getAllDraftSms";
+const GET_SIM_SLOTS = "getSimSlots";
 const GET_ALL_CONVERSATIONS = "getAllConversations";
 const SEND_SMS = "sendSms";
 const SEND_MULTIPART_SMS = "sendMultipartSms";
@@ -103,8 +104,7 @@ class SmsColumn extends _TelephonyColumn {
 
   static const ID = SmsColumn._(_SmsProjections.ID);
   static const ADDRESS = SmsColumn._(_SmsProjections.ADDRESS);
-  static const SERVICE_CENTER_ADDRESS =
-      SmsColumn._(_SmsProjections.SERVICE_CENTER_ADDRESS);
+  static const SERVICE_CENTER_ADDRESS = SmsColumn._(_SmsProjections.SERVICE_CENTER_ADDRESS);
   static const BODY = SmsColumn._(_SmsProjections.BODY);
   static const DATE = SmsColumn._(_SmsProjections.DATE);
   static const DATE_SENT = SmsColumn._(_SmsProjections.DATE_SENT);
@@ -127,21 +127,14 @@ class ConversationColumn extends _TelephonyColumn {
   const ConversationColumn._(this._columnName);
 
   static const SNIPPET = ConversationColumn._(_ConversationProjections.SNIPPET);
-  static const THREAD_ID =
-      ConversationColumn._(_ConversationProjections.THREAD_ID);
-  static const MSG_COUNT =
-      ConversationColumn._(_ConversationProjections.MSG_COUNT);
+  static const THREAD_ID = ConversationColumn._(_ConversationProjections.THREAD_ID);
+  static const MSG_COUNT = ConversationColumn._(_ConversationProjections.MSG_COUNT);
 
   @override
   String get _name => _columnName;
 }
 
-const DEFAULT_SMS_COLUMNS = [
-  SmsColumn.ID,
-  SmsColumn.ADDRESS,
-  SmsColumn.BODY,
-  SmsColumn.DATE
-];
+const DEFAULT_SMS_COLUMNS = [SmsColumn.ID, SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE];
 
 const INCOMING_SMS_COLUMNS = [
   SmsColumn._(_SmsProjections.ORIGINATING_ADDRESS),
@@ -225,13 +218,7 @@ enum SimState {
 }
 
 /// Represents state of cellular service.
-enum ServiceState {
-  IN_SERVICE,
-  OUT_OF_SERVICE,
-  EMERGENCY_ONLY,
-  POWER_OFF,
-  UNKNOWN
-}
+enum ServiceState { IN_SERVICE, OUT_OF_SERVICE, EMERGENCY_ONLY, POWER_OFF, UNKNOWN }
 
 /// Represents the quality of cellular signal.
 enum SignalStrength { NONE_OR_UNKNOWN, POOR, MODERATE, GOOD, GREAT }

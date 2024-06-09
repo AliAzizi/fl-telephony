@@ -38,6 +38,7 @@ import com.shounakmulay.telephony.utils.Constants.SMS_QUERY_REQUEST_CODE
 import com.shounakmulay.telephony.utils.Constants.SMS_SEND_REQUEST_CODE
 import com.shounakmulay.telephony.utils.Constants.SMS_SENT
 import com.shounakmulay.telephony.utils.Constants.SORT_ORDER
+import com.shounakmulay.telephony.utils.Constants.SUBSCRIPTION_ID_KEY
 import com.shounakmulay.telephony.utils.Constants.WRONG_METHOD_TYPE
 import com.shounakmulay.telephony.utils.ContentUri
 import com.shounakmulay.telephony.utils.SmsAction
@@ -66,6 +67,7 @@ class SmsMethodCallHandler(
 
   private lateinit var messageBody: String
   private lateinit var address: String
+  private var subscriptionId: Int? = null
   private var listenStatus: Boolean = false
 
   private var setupHandle: Long = -1
@@ -99,6 +101,7 @@ class SmsMethodCallHandler(
             && call.hasArgument(ADDRESS)) {
           val messageBody = call.argument<String>(MESSAGE_BODY)
           val address = call.argument<String>(ADDRESS)
+          val subscriptionId = call.argument<Int>(SUBSCRIPTION_ID_KEY)
           if (messageBody.isNullOrBlank() || address.isNullOrBlank()) {
             result.error(ILLEGAL_ARGUMENT, Constants.MESSAGE_OR_ADDRESS_CANNOT_BE_NULL, null)
             return
@@ -106,6 +109,7 @@ class SmsMethodCallHandler(
 
           this.messageBody = messageBody
           this.address = address
+          this.subscriptionId = subscriptionId
 
           listenStatus = call.argument(LISTEN_STATUS) ?: false
         }
@@ -147,7 +151,8 @@ class SmsMethodCallHandler(
    *
    * #####
    *
-   * If permission was not previously granted, [handleMethod] will request the user for permission
+   * If permission was not previously granted, [handleMethod] will request the
+   * ser for permission
    *
    * Once user grants the permission this method will be executed.
    *
@@ -194,8 +199,8 @@ class SmsMethodCallHandler(
       context.applicationContext.registerReceiver(this, intentFilter)
     }
     when (smsAction) {
-      SmsAction.SEND_SMS -> smsController.sendSms(address, messageBody, listenStatus)
-      SmsAction.SEND_MULTIPART_SMS -> smsController.sendMultipartSms(address, messageBody, listenStatus)
+      SmsAction.SEND_SMS -> smsController.sendSms(address, messageBody, listenStatus, subscriptionId)
+      SmsAction.SEND_MULTIPART_SMS -> smsController.sendMultipartSms(address, messageBody, listenStatus, subscriptionId)
       SmsAction.SEND_SMS_INTENT -> smsController.sendSmsIntent(address, messageBody)
       else -> throw IllegalArgumentException()
     }
@@ -237,6 +242,7 @@ class SmsMethodCallHandler(
         SmsAction.GET_SIM_OPERATOR_NAME -> getSimOperatorName()
         SmsAction.GET_SIM_STATE -> getSimState()
         SmsAction.IS_NETWORK_ROAMING -> isNetworkRoaming()
+        SmsAction.GET_SIM_SLOTS -> getSimSlots()
         SmsAction.GET_SIGNAL_STRENGTH -> {
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             getSignalStrength()
@@ -330,6 +336,7 @@ class SmsMethodCallHandler(
       SmsAction.GET_SIM_STATE,
       SmsAction.IS_NETWORK_ROAMING,
       SmsAction.GET_SIGNAL_STRENGTH,
+      SmsAction.GET_SIM_SLOTS,
       SmsAction.NO_SUCH_METHOD -> return true
     }
   }

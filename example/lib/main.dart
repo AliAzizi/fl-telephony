@@ -47,8 +47,7 @@ class _MyAppState extends State<MyApp> {
     final bool? result = await telephony.requestPhoneAndSmsPermissions;
 
     if (result != null && result) {
-      telephony.listenIncomingSms(
-          onNewMessage: onMessage, onBackgroundMessage: onBackgroundMessage);
+      telephony.listenIncomingSms(onNewMessage: onMessage, onBackgroundMessage: onBackgroundMessage);
     }
 
     if (!mounted) return;
@@ -66,10 +65,29 @@ class _MyAppState extends State<MyApp> {
         children: [
           Center(child: Text("Latest received SMS: $_message")),
           TextButton(
-              onPressed: () async {
-                await telephony.openDialer("123413453");
-              },
-              child: Text('Open Dialer'))
+            onPressed: () async {
+              await telephony.openDialer("123413453");
+            },
+            child: Text('Open Dialer'),
+          ),
+          TextButton(
+            onPressed: () async {
+              print((await telephony.getSimSlots()).map((e) => e.subscriptionId).toList());
+            },
+            child: Text("Print Available Sim slots"),
+          ),
+          TextButton(
+            onPressed: () async {
+              telephony.sendSms(
+                to: "1234567890",
+                message: "Hello World",
+                statusListener: onSendStatus,
+                subscriptionId: 1,
+                isMultipart: true,
+              );
+            },
+            child: Text("Send Fake SMS"),
+          ),
         ],
       ),
     ));
