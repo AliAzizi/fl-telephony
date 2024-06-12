@@ -33,7 +33,7 @@ class _MyAppState extends State<MyApp> {
 
   onSendStatus(SendStatus status) {
     setState(() {
-      _message = status == SendStatus.SENT ? "sent" : "delivered";
+      _message = status.toString();
     });
   }
 
@@ -82,7 +82,7 @@ class _MyAppState extends State<MyApp> {
                 to: "1234567890",
                 message: "Hello World",
                 statusListener: onSendStatus,
-                subscriptionId: 1,
+                subscriptionId: 2,
                 isMultipart: true,
               );
             },
