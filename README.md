@@ -295,6 +295,22 @@ class _MyAppState extends State<MyApp> {
 
 ```
 
+### [Dual Sim Support]
+Add the following permission in your `AndroidManifest.xml`
+```xml
+<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+```
+
+
+```dart
+
+// This will return list of SimSlot Object containing subscriptionId, slot index, carrierName, and number.
+
+final result = await telephony.getSimSlots()
+
+```
+
 
 ## Features
 
