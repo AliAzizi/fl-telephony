@@ -1,22 +1,15 @@
-<p align="center">
-    <a href="https://pub.dev/packages/telephony" alt="Pub">
-        <img src="https://img.shields.io/pub/v/telephony" /></a>
-    <a href="https://github.com/shounakmulay/Telephony/releases" alt="Release">
-        <img src="https://img.shields.io/github/v/release/shounakmulay/telephony" /></a>
-    <a href="https://github.com/shounakmulay/Telephony/actions/workflows/Telephony_CI.yml?query=branch%3Adevelop" alt="Build">
-        <img src="https://github.com/shounakmulay/telephony/actions/workflows/Telephony_CI.yml/badge.svg?branch=develop" /></a>
-</p>
-
-
 # Telephony
 |:exclamation: This plugin currently only works on Android Platform|
 |------------------------------------------------------------------|
 
+Forked from https://github.com/shounakmulay/Telephony
 
 A Flutter plugin to use telephony features such as
 - Send SMS Messages
 - Query SMS Messages
+- Dual SIM support
 - Listen for incoming SMS
+- Listen to sent SMS status
 - Retrieve various network parameters
 - Start phone calls
 
@@ -342,5 +335,6 @@ final result = await telephony.getSimSlots()
 	 - [x] Signal strength
 	 - [x] Service state
  - [x] Start Phone Call
- - [ ] Schedule a SMS
- - [ ] SMS Retriever API
+ - [x] Get SIM slots
+ - [x] Get SMS delivery status
+ - [x] Dual SIM sending support
