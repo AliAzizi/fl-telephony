@@ -66,12 +66,16 @@ Add the following permission in your `AndroidManifest.xml`
 
 SMS can either be sent directly or via the default SMS app.
 
-#### Send SMS directly from your app:
+#### Send SMS directly from your app: 
+You can also set the subscription ID, to select which sim card will be used to send sms. To get the subscription id, call the `await telephony.getSimSlots()`
 ```dart
-telephony.sendSms(
+ telephony.sendSms(
 	to: "1234567890",
-	message: "May the force be with you!"
-	);
+	message: "Hello World",
+	statusListener: onSendStatus,
+	subscriptionId: 2,
+	isMultipart: true,
+ );
 ```
 If you want to listen to the status of the message being sent, provide `SmsSendStatusListener` to the `sendSms` function.
 ```dart
@@ -292,6 +296,22 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     final inbox = telephony.getInboxSms()
   }
+
+```
+
+### [Dual Sim Support]
+Add the following permission in your `AndroidManifest.xml`
+```xml
+<uses-permission android:name="android.permission.READ_PHONE_STATE" />
+<uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+```
+
+
+```dart
+
+// This will return list of SimSlot Object containing subscriptionId, slot index, carrierName, and number.
+
+final result = await telephony.getSimSlots()
 
 ```
 
