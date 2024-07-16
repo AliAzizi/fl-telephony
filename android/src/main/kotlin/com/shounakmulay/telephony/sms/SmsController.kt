@@ -145,22 +145,45 @@ class SmsController(private val context: Context) {
                 ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED) {
             return emptyList()
         }
+        
 
-        val subscriptionInfoList = subscriptionManager.activeSubscriptionInfoList
-
+        val subscriptionInfoList = subscriptionManager.getActiveSubscriptionInfoList()
+     
         return subscriptionInfoList.map {
             mapOf(
                     "subscriptionId" to it.subscriptionId,
                     "index" to it.simSlotIndex,
-                    "carrierName" to it.carrierName.toString()
+                    "carrierName" to it.carrierName.toString(),
+                    "number" to getPhoneNumber(it)
             )
         }
     }
 
+    private fun getPhoneNumber(subscriptionInfo:SubscriptionInfo):String{
+        val phoneNumber = subscriptionInfo.getNumber()
 
+        if(phoneNumber.isEmpty()){
+            /// Instantiate telephony and set subscription id and get the number
+            val telephonyManager =
+                context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            telephonyManager.createForSubscriptionId(subscriptionInfo.subscriptionId)
+
+            return telephonyManager.getLine1Number();
+        }
+
+        return phoneNumber;
+    }
+    
     private fun getSmsManager(subscriptionId: Int): SmsManager {
         val smsManager = SmsManager.getSmsManagerForSubscriptionId(2)
                 ?: throw RuntimeException("Flutter Telephony: Error getting SmsManager")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            smsManager = getSystemService(context, SmsManager::class.java)
+        } else {
+            smsManager = SmsManager.getDefault()
+        }
+        
         if (subscriptionId != SubscriptionManager.INVALID_SUBSCRIPTION_ID) {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 smsManager.createForSubscriptionId(subscriptionId)
@@ -256,7 +279,7 @@ class SmsController(private val context: Context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_PHONE_STATE])
+    @RequiresPermission(allOf = [Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.READ_PHONE_STATE,Manifest.permission.READ_PHONE_NUMBERS,Manifest.permission.READ_SMS])
     fun getServiceState(): Int? {
         val serviceState = getTelephonyManager().serviceState
         return serviceState?.state

@@ -665,14 +665,16 @@ class SimSlot {
   final int subscriptionId;
   final int index;
   final String carrierName;
+  final String number;
 
-  SimSlot({required this.subscriptionId, required this.index, required this.carrierName});
+  SimSlot({required this.subscriptionId, required this.index, required this.carrierName, required this.number});
 
   factory SimSlot.fromMap(Map map) {
     return SimSlot(
       subscriptionId: map['subscriptionId'],
       index: map['index'],
       carrierName: map['carrierName'],
+      number: map['number'],
     );
   }
 }
